@@ -1,17 +1,15 @@
 電子サバゲー
 
-
-
-
-
-
-
+会議室的な広さ
 
 # 電子工作的なあれこれ
 バトラー
 銃みたいなものを作る
 LaserX を参考に
 
+銃3Dプリンターで制作を行う
+最悪１００金のを改造する
+モデルを制作する
 ### 実際の既製品　
 
 - https://www.ifixit.com/Device/Laser_X_88016#Section_Identification]
@@ -31,3 +29,5 @@ LaserX を参考に
 - https://www.instructables.com/DIY-Laser-Tag-Using-Arduino/
 - https://hackaday.com/2021/01/07/diy-laser-tag-system-comes-with-all-the-bells-and-whistles/
 - https://github.com/Sand1929/laser-tag
+# Goal
+電子銃のモデルの完成
