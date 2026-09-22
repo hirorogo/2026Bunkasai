@@ -8,14 +8,12 @@ SECTIONS = 24
 
 # Z-sections along the full length 0..155
 # 0: barrel bottom
-# 100: grip start (barrel outer=40, inner=36; grip outer=18, inner=15)
-# 120: barrel end / grip continues
+# 100: shoulder (barrel outer=40, inner=36; grip outer=18, inner=15)
 # 155: grip end
 
 # Outer radii at key Z
 Z_BARREL_START = 0.0
 Z_GRIP_START   = 100.0
-Z_BARREL_END   = 120.0
 Z_GRIP_END     = 155.0
 
 # Outer profile: (z, r_out)

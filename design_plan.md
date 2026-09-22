@@ -37,7 +37,7 @@
 ## Mechanical Components (3D Printed)
 | Part | Description | Approx. Dimensions | Print Time |
 |------|-------------|-------------------|------------|
-| barrel | Hollow cylinder, capped both ends | 120 mm × Ø80 mm (4 mm wall) | ~1.5 hrs |
+| barrel | Hollow cylinder, capped bottom end | 100 mm × Ø80 mm (4 mm wall) | ~1.5 hrs |
 | grip | Tapered hollow grip (rear of barrel) | 55 mm × 35 mm (3 mm wall) | ~1 hr |
 | nozzle_housing | Laser/emitter holder (optional) | 20 mm × 10 mm | ~0.5 hr |
 
