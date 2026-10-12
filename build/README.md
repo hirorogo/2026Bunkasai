@@ -49,6 +49,40 @@ D3 ──[1kΩ]── B:2N2222
 
 ## 作り方・手順
 
+### PlatformIO (VSCode) の場合 ←こちらが現在の環境
+
+0. PlatformIO Core のインストールが終わるまで待つ(数分かかる)。
+1. VSCodeで **`build/` フォルダを開く**(platformio.iniがあるのでPIOプロジェクトとして認識される)。
+2. 下部ステータスバーの env 切替で `ir_beep` / `ir_dump` / `ir_rx` / `ir_tx` を選ぶ。
+3. `→`(Upload) で書き込み、コンのアイコンでシリアルモニタ(115200)。
+   - `IRremote`ライブラリは `platformio.ini` の `lib_deps` で自動導入される。
+   - うまくいかない場合: `pio run -e ir_dump -t upload` をターミナルで直接実行。
+
+### arduino-cli の場合 (GUI不要・CLIだけで完結)
+
+`~/tools/arduino-cli/arduino-cli.exe` に導入済み(arduino:avr 1.8.8, IRremote 4.7.1 インストール済)。
+
+```powershell
+CLI="$HOME/tools/arduino-cli/arduino-cli.exe"   # bashの場合
+# PowerShellなら: $CLI="$HOME\tools\arduino-cli\arduino-cli.exe"
+
+# 1. ボード確認 (UNOを挿してCOMポートを見る)
+& $CLI board list          # 例: COM3 arduino:avr:uno
+
+# 2. コンパイル (build/フォルダで実行)
+& $CLI compile --fqbn arduino:avr:uno ir_beep
+
+# 3. 書き込み (-p にCOMポート)
+& $CLI upload -p COM3 --fqbn arduino:avr:uno ir_beep
+
+# 4. シリアルモニタ (115200)
+& $CLI monitor -p COM3 --config baudrate=115200
+```
+
+スケッチ名はフォルダ名(`ir_beep` `ir_dump` `ir_rx` `ir_tx`)をそのまま指定する。
+
+### Arduino IDE の場合
+
 1. **ライブラリ導入**: Arduino IDE → ライブラリマネージャ → `IRremote` (Armin Joachimsmeyer版, v4.x) をインストール。Boardは「Arduino Uno」。
 2. **Phase 0 - リモコン解析**: 受信側だけブレッドボードで組み(受光モジュール1個+D2)、`ir_dump.ino` を書き込み → シリアルモニタ115200でリモコンのボタンを押す → `Protocol / Address / Command` が出る。
 3. **MVP化**: 出た `Address / Command` を `ir_rx.ino` の `GUN_ADDRESS` / `GUN_COMMAND` に書き込んで書き直し。

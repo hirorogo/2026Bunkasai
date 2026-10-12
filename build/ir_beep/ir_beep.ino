@@ -1,34 +1,40 @@
-// ir_beep.ino - 最小構成: 何かIRが来たらブザーが鳴る
-// Board: Arduino UNO。ライブラリ不要。
-// 用途: 配線と受光モジュールの生死確認(Phase 0の最初の1歩)。
-//       プロトコル判別はしないので、家電リモコンでもエアコンでも鳴る。
-//       ゲーム用の被弾判定は ir_rx.ino を使うこと。
+// ir_beep.ino - シンプル版: リモコンの信号が来たらブザーが鳴る
+// Board: Arduino UNO / Lib: Arduino-IRremote v4.x
+// ノイズや長押しリピートでは鳴らない。エアコン等の独自フォーマット
+// (UNKNOWNになる)も、ビット数が十分あれば本物とみなして鳴らす。
+// 「どのボタンでも鳴る」確認用。特定ボタン限定のゲーム版は ir_rx.ino。
 // 配線: 受光モジュール OUT -> D2, VCC -> 5V, GND -> GND
 //       アクティブブザー(+) -> D8, (-) -> GND
+#include <IRremote.h>
 
-const int SENSOR_PIN = 2; // 受光モジュール OUT (アクティブLow)
-const int BUZZER_PIN = 8; // アクティブブザー(+)
+const uint8_t PIN_IR = 2;
+const uint8_t PIN_BUZZER = 8;
+const uint32_t BUZZER_MS = 300;    // 鳴る長さ
+const uint8_t MIN_RAW_LEN = 40;    // ノイズは1-7bit程度。本物は40以上
 
-bool isBuzzerActive = false;
-unsigned long buzzerStartTime = 0;
-const unsigned long BUZZER_DURATION = 500; // 0.5秒鳴らす
+uint32_t buzzerOffAt = 0;
 
 void setup() {
-  pinMode(SENSOR_PIN, INPUT);
-  pinMode(BUZZER_PIN, OUTPUT);
-  digitalWrite(BUZZER_PIN, LOW);
+  pinMode(PIN_BUZZER, OUTPUT);
+  digitalWrite(PIN_BUZZER, LOW);
+  IrReceiver.begin(PIN_IR, ENABLE_LED_FEEDBACK);
 }
 
 void loop() {
-  unsigned long now = millis();
-
-  if (digitalRead(SENSOR_PIN) == LOW && !isBuzzerActive) {
-    digitalWrite(BUZZER_PIN, HIGH);
-    isBuzzerActive = true;
-    buzzerStartTime = now;
+  if (buzzerOffAt && millis() >= buzzerOffAt) {
+    digitalWrite(PIN_BUZZER, LOW);
+    buzzerOffAt = 0;
   }
-  if (isBuzzerActive && now - buzzerStartTime >= BUZZER_DURATION) {
-    digitalWrite(BUZZER_PIN, LOW);
-    isBuzzerActive = false;
+
+  if (IrReceiver.decode()) {
+    bool decoded = IrReceiver.decodedIRData.protocol != UNKNOWN;
+    bool longEnough = IrReceiver.decodedIRData.rawlen >= MIN_RAW_LEN;
+    bool isRepeat = IrReceiver.decodedIRData.flags & IRDATA_FLAGS_IS_REPEAT;
+    // 解読できた信号 or 十分な長さの信号(エアコン等)のみ反応
+    if ((decoded || longEnough) && !isRepeat) {
+      digitalWrite(PIN_BUZZER, HIGH);
+      buzzerOffAt = millis() + BUZZER_MS;
+    }
+    IrReceiver.resume();
   }
 }
