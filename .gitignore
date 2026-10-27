@@ -1,0 +1,12 @@
+# Build artifacts
+*.bin
+*.elf
+*.hex
+*.lst
+*.map
+*.o
+generated__.ld
+
+# PlatformIO / IDE
+.pio/
+.vscode/.browse.c_cpp.db*
