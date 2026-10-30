@@ -52,37 +52,39 @@ uint32_t measurePulseUs(int state, uint32_t timeoutUs)
 }
 
 // 有効な赤外線リモコン信号（エアコン/テレビ/自作銃等）か判定する復号関数
-// 蛍光灯ノイズ（数十〜数百µs）を完全に排除
+// 蛍光灯ノイズ（数十〜数百µs）を完全に排除し、本物のIR信号のみ確実に通す
 int checkValidIRSignal()
 {
     // 1. リーダーパルス（LOW時間）の長さを計測
-    // NEC: 約9.0ms, 家電協(エアコン): 約3.2ms, SONY: 約2.4ms
-    uint32_t leaderLow = measurePulseUs(0, 12000);
-    if (leaderLow < 1800 || leaderLow > 11000) {
+    // 蛍光灯ノイズは0.5ms未満で消える。本物のリモコンは1.5ms〜12ms継続
+    // （エアコン/家電協:約3.2ms, SONY:約2.4ms, テレビ/NEC:約9.0ms）
+    uint32_t leaderLow = measurePulseUs(0, 15000);
+    if (leaderLow < 1500 || leaderLow > 13000) {
         return 0; // 蛍光灯ノイズ（短すぎる）または異常パルスは破棄
     }
 
     // 2. リーダースペース（HIGH時間）の長さを計測
-    // NEC: 約4.5ms, 家電協: 約1.6ms, SONY: 約0.6ms
-    uint32_t leaderHigh = measurePulseUs(1, 6000);
-    if (leaderHigh < 400 || leaderHigh > 5500) {
-        return 0; // 規格外
+    // SONY:約0.6ms, エアコン:約1.6ms, NEC:約4.5ms
+    uint32_t leaderHigh = measurePulseUs(1, 8000);
+    if (leaderHigh < 300 || leaderHigh > 7000) {
+        return 0; // 規格外スペースは破棄
     }
 
-    // 3. データビット列（最低4ビット以上）が規則的に続くかを検証
-    int validBits = 0;
-    for (int i = 0; i < 8; i++) {
-        uint32_t bitLow = measurePulseUs(0, 2000);
-        if (bitLow < 200 || bitLow > 1200) break;
+    // 3. 後続のデータパルス列（最低1ビット以上）が届くか確認
+    // 単発の外乱光ではなく、変調パルス信号であることを確定
+    int pulseCount = 0;
+    for (int i = 0; i < 4; i++) {
+        uint32_t bitLow = measurePulseUs(0, 3000);
+        if (bitLow < 150 || bitLow > 2000) break;
 
         uint32_t bitHigh = measurePulseUs(1, 3000);
-        if (bitHigh < 200 || bitHigh > 2500) break;
+        if (bitHigh < 150 || bitHigh > 2500) break;
 
-        validBits++;
+        pulseCount++;
     }
 
-    // 4ビット以上正常に受信できれば有効なIR信号（復号成功）と判定
-    return (validBits >= 4);
+    // リーダー合格 ＋ 後続パルス確認で有効なリモコン信号（復号成功）と判定
+    return (pulseCount >= 1);
 }
 
 int main()

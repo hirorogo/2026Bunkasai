@@ -12,15 +12,15 @@
 // 通常のボタンスイッチ仕様（プルアップ入力）: 押下時は 0 (LOW: GND導通)
 #define BUTTON_PRESSED_STATE 0
 
-// 38kHzパルス（周期約26µs: HIGH 13µs / LOW 13µs）を指定マイクロ秒バースト出力する関数
+// 38kHzパルス（周期約26.3µs: GPIOオーバーヘッドを考慮しHIGH 12µs / LOW 12µs）を出力
 void send38kHzBurst(uint32_t durationUs)
 {
     uint32_t cycles = durationUs / 26;
     for (uint32_t i = 0; i < cycles; i++) {
         funDigitalWrite(PIN_IR_LED, FUN_HIGH);
-        Delay_Us(13);
+        Delay_Us(12);
         funDigitalWrite(PIN_IR_LED, FUN_LOW);
-        Delay_Us(13);
+        Delay_Us(12);
     }
 }
 
