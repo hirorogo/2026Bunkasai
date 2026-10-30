@@ -9,8 +9,8 @@
 // D2 ピン = PC0 (UIAPduino オンボード「L」LED)
 #define PIN_STATUS_LED  PC0
 
-// 押した時に導通が切れる（NC）スイッチ仕様: 押下時は 1 (HIGH)
-#define BUTTON_PRESSED_STATE 1
+// 通常のボタンスイッチ仕様（プルアップ入力）: 押下時は 0 (LOW: GND導通)
+#define BUTTON_PRESSED_STATE 0
 
 // 38kHzパルス（周期約26µs: HIGH 13µs / LOW 13µs）を指定マイクロ秒バースト出力する関数
 void send38kHzBurst(uint32_t durationUs)
@@ -22,6 +22,35 @@ void send38kHzBurst(uint32_t durationUs)
         funDigitalWrite(PIN_IR_LED, FUN_LOW);
         Delay_Us(13);
     }
+}
+
+// NECフォーマット互換の赤外線リモコンパケットを送信する関数
+void sendNECPacket(uint8_t data)
+{
+    // 1. リーダー: 9.0ms バースト
+    send38kHzBurst(9000);
+    // リーダースペース: 4.5ms 休止
+    funDigitalWrite(PIN_IR_LED, FUN_LOW);
+    Delay_Ms(4);
+    Delay_Us(500);
+
+    // 2. データ 8ビット送信 (LSB first)
+    for (int i = 0; i < 8; i++) {
+        // ビットマーク: 560µs バースト
+        send38kHzBurst(560);
+        funDigitalWrite(PIN_IR_LED, FUN_LOW);
+        if ((data >> i) & 1) {
+            // '1': 1680µs スペース
+            Delay_Us(1680);
+        } else {
+            // '0': 560µs スペース
+            Delay_Us(560);
+        }
+    }
+
+    // 3. ストップビット: 560µs バースト
+    send38kHzBurst(560);
+    funDigitalWrite(PIN_IR_LED, FUN_LOW);
 }
 
 int main()
@@ -51,10 +80,12 @@ int main()
             // ボタン押下中: オンボードLED点灯
             funDigitalWrite(PIN_STATUS_LED, FUN_HIGH);
 
-            // 38kHz 赤外線パルスをバースト出力 (1.2ms 送信 + 0.4ms 休止)
-            send38kHzBurst(1200);
+            // NEC規格互換の赤外線リモコンパケットを送信
+            sendNECPacket(0xA5);
+
+            // 送信フレーム間隔（約40ms休止）
             funDigitalWrite(PIN_IR_LED, FUN_LOW);
-            Delay_Us(400);
+            Delay_Ms(40);
         } else {
             // ボタン非押下: 赤外線・LEDともに消灯
             funDigitalWrite(PIN_IR_LED, FUN_LOW);

@@ -11,8 +11,8 @@ void setup() {
 
 void loop() {
   if (digitalRead(PIN_IR_RECEIVER) == LOW) {
-    digitalWrite(PIN_BUZZER, HIGH); // 受光中: ブザー発音
-  } else {
-    digitalWrite(PIN_BUZZER, LOW);  // 非受光: ブザー停止
+    digitalWrite(PIN_BUZZER, HIGH); // 受光検知: ブザー発音開始
+    delay(2500);                    // 2.5秒間鳴り続ける
+    digitalWrite(PIN_BUZZER, LOW);  // ブザー停止
   }
 }

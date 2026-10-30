@@ -24,8 +24,8 @@ const int PIN_IR_LED     = 8; // 赤外線LED出力ピン (左列 11番目「8�
 const int PIN_STATUS_LED = 2; // UIAPduino オンボードLED (基板上の「L」LED / D2)
 
 // ---------- スイッチ極性設定 ----------
-// 押した時に導通が切れる（NC）スイッチ仕様: 押下時は HIGH になります
-const int BUTTON_PRESSED_STATE = HIGH;
+// 通常のスイッチ仕様（プルアップ入力）: 押下時は LOW になります
+const int BUTTON_PRESSED_STATE = LOW;
 
 // ---------- 38kHzキャリア生成用定数 ----------
 // 38kHzの周期は約 26.3 microseconds (HIGH: 13us, LOW: 13us)

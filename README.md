@@ -28,8 +28,8 @@ flowchart LR
 
 | 接続元パーツ | パーツ側端子 | 接続先 (UIAPduino) | 備考 |
 |---|---|---|---|
-| プッシュスイッチ (ADS-299) | 線 1 | **4番ピン** | 押すと切れる2線 |
-| プッシュスイッチ (ADS-299) | 線 2 | **GNDピン** | 極性なし（線1と線2は逆でも動作） |
+| プッシュスイッチ | 線 1 | **4番ピン** | 押すとGNDに導通 |
+| プッシュスイッチ | 線 2 | **GNDピン** | 極性なし（線1と線2は逆でも動作） |
 | 赤外線モジュール (IR Transmitter V1221) | `DAT` | **8番ピン** | 38kHz 信号出力 |
 | 赤外線モジュール (IR Transmitter V1221) | `VCC` | **5Vピン** | 電源供給 |
 | 赤外線モジュール (IR Transmitter V1221) | `GND` | **GNDピン** | グランド |
@@ -67,8 +67,8 @@ flowchart LR
 | 5V 自励式アクティブブザー | `-` (短い足) | **GNDピン** | グランド |
 
 ### 的（受光部）の動作
-- 受光部が 38kHz 赤外線を検知すると、3番ピン が LOW になり、5番ピン に接続されたブザーが鳴動します。
-- 赤外線が遮断されると、ブザーが停止します。
+- 受光部が 38kHz 赤外線を一度検知すると、3番ピン が LOW になり、5番ピン に接続されたブザーが約2.5秒間鳴動し続けます。
+- 鳴動終了後、ブザーは自動停止します（再度受光するとまた約2.5秒鳴動します）。
 
 ---
 
@@ -90,8 +90,8 @@ flowchart LR
 
 | タイプ | 商品名 / ASIN | 特徴 | リンク |
 |---|---|---|---|
-| 1. USBポート付きタイプ（推奨） | KKHMF DC-DC USB 0.9V-5V に 5V 電圧変換ステップアップブースターモジュール (ASIN: B077XRWK3Q) | USB Type-A メス端子付き。UIAPduinoへUSBケーブルで直接給電可能。ハンダ付けが少なく初心者向け。 | [Amazon商品ページ (B077XRWK3Q)](https://www.amazon.co.jp/dp/B077XRWK3Q) |
-| 2. 超小型基板タイプ | 0.9V-5V to 5V ステップアップ 昇圧ミニモジュール | 約11mm×10mmの極小サイズ。リード線を直付けでき、銃や的の筐体に内蔵可能。 | [Amazon検索リンク](https://www.amazon.co.jp/s?k=DC-DC+%E6%98%87%E5%9C%A7+0.9V+5V+%E5%B0%8F%E5%9E%8B) |
+| **超小型基板タイプ（USBなし・最も推奨）** | xuuyuu DC-DC昇圧コンバーターモジュール 10個セット (0.9-5Vから5Vに昇圧) (ASIN: B0H3843YRN) | USB端子がなく約11mm×10.5mmの極小サイズ。USBケーブルの出っ張りが一切なく、銃や的のケース内に最もコンパクトに内蔵可能。 | [Amazon商品ページ (B0H3843YRN)](https://www.amazon.co.jp/dp/B0H3843YRN) |
+| USBポート付きタイプ | KKHMF DC-DC USB 0.9V-5V に 5V 電圧変換ブースターモジュール (ASIN: B077XRWK3Q) | USB Type-A メス端子付き。UIAPduinoへUSBケーブルで直接給電可能。 | [Amazon商品ページ (B077XRWK3Q)](https://www.amazon.co.jp/dp/B077XRWK3Q) |
 
 - 入力電圧範囲: `0.9V 〜 5V`
 - 出力電圧: `5V` 固定
@@ -112,8 +112,14 @@ flowchart LR
     │   ├── funconfig.h    # MCU設定
     │   ├── tx.ino         # Arduino IDE用スケッチ
     │   └── main.cpp       # PlatformIO用ソース
-    └── rx/                # 的（受信機）プログラム
-        ├── rx.c           # ch32fun用ネイティブCコード
+    ├── rx/                # 的（受信機）アクティブブザー版
+    │   ├── rx.c           # ch32fun用ネイティブCコード（2.5秒発音）
+    │   ├── Makefile       # make flash で書き込み
+    │   ├── funconfig.h    # MCU設定
+    │   ├── rx.ino         # Arduino IDE用スケッチ
+    │   └── main.cpp       # PlatformIO用ソース
+    └── rx_passive/        # 的（受信機）パッシブブザー（他励式/圧電）版
+        ├── rx.c           # ch32fun用ネイティブCコード（2.7kHzトーンで2.5秒発音）
         ├── Makefile       # make flash で書き込み
         ├── funconfig.h    # MCU設定
         ├── rx.ino         # Arduino IDE用スケッチ
@@ -131,9 +137,16 @@ flowchart LR
    make -C src/tx flash
    ```
 
-### 的（受信機）を書き込む場合
+### 的（受信機・アクティブブザー版）を書き込む場合
 1. UIAPduino のリセットボタン（金色の丸いボタン）を押したままPCにUSB接続。
 2. ターミナルで以下を実行：
    ```bash
    make -C src/rx flash
+   ```
+
+### 的（受信機・パッシブブザー/圧電スピーカー版）を書き込む場合
+1. UIAPduino のリセットボタン（金色の丸いボタン）を押したままPCにUSB接続。
+2. ターミナルで以下を実行：
+   ```bash
+   make -C src/rx_passive flash
    ```
